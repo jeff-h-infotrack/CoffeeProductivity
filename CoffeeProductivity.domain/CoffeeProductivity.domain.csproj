@@ -16,8 +16,4 @@
     <ProjectReference Include="..\CoffeeProductivity.data\CoffeeProductivity.data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\ViewModels\" />
-  </ItemGroup>
-
 </Project>

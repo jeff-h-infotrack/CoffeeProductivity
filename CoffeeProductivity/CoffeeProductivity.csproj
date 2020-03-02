@@ -18,5 +18,9 @@
     <ProjectReference Include="..\CoffeeProductivity.domain\CoffeeProductivity.domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 
 </Project>

@@ -9,5 +9,6 @@ namespace CoffeeProductivity.data.Services
     public interface IGithubService
     {
         Task<List<GithubEvent>> GetEvents(string user, int page);
+        Task<List<Member>> GetOrganisationMembers(string org, int page);
     }
 }
