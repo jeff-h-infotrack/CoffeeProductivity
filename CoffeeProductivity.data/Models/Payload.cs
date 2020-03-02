@@ -1,20 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace CoffeeProductivity.data.Models
 {
     public class Payload
     {
-        public long push_id { get; set; }
-        public int size { get; set; }
-        public int distinct_size { get; set; }
-        public string _ref { get; set; }
-        public string head { get; set; }
-        public string before { get; set; }
-        public Commit[] commits { get; set; }
-        public string ref_type { get; set; }
-        public string master_branch { get; set; }
+        [JsonPropertyName("push_id")]
+        public long PushId { get; set; }
+        public int Size { get; set; }
+
+        [JsonPropertyName("distinct_size")]
+        public int DistinctSize { get; set; }
+
+        [JsonPropertyName("_ref")]
+        public string Ref { get; set; }
+        public string Head { get; set; }
+        public string Before { get; set; }
+        public List<Commit> Commits { get; set; }
+
+        [JsonPropertyName("ref_type")]
+        public string RefType { get; set; }
+
+        [JsonPropertyName("master_branch")]
+        public string MasterBranch { get; set; }
         public object Description { get; set; }
         public string PusherType { get; set; }
     }
