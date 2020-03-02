@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using CoffeeProductivity.data.Models;
@@ -27,12 +28,28 @@ namespace CoffeeProductivity.data.Services
             _client.BaseAddress = new Uri(host);
             _client.DefaultRequestHeaders.Add("Accept", "application/json");
             _client.DefaultRequestHeaders.Add("User-Agent", "CoffeeProductivityAPI");
+            _client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", _token);
         }
 
-        public async Task<List<GithubEvent>> GetEvents(int? page)
+        public async Task<List<Member>> GetOrganisationMembers(string org, int page)
         {
-            var pageNum = page ?? 1;
-            var path = $"/api/resource/shopperHistory?token={pageNum}";
+            var path = $"/orgs/{org}/members?page={page}";
+            var response = await _client.GetAsync(path);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<IEnumerable<Member>>(jsonString);
+                return result.ToList();
+            }
+            else if (response.StatusCode == HttpStatusCode.NotFound) return null;
+            else throw new Exception(response.ReasonPhrase);
+        }
+
+        public async Task<List<GithubEvent>> GetEvents(string user, int page)
+        {
+            var path = $"/users/{user}/events?page={page}";
             var response = await _client.GetAsync(path);
 
             if (response.IsSuccessStatusCode)

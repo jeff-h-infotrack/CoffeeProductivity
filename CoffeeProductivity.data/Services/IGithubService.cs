@@ -8,6 +8,6 @@ namespace CoffeeProductivity.data.Services
 {
     public interface IGithubService
     {
-        Task<List<GithubEvent>> GetEvents(int? page);
+        Task<List<GithubEvent>> GetEvents(string user, int page);
     }
 }
