@@ -6,6 +6,6 @@ namespace CoffeeProductivity.data.Models
 {
     public class CommitPerson : Person
     {
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
     }
 }

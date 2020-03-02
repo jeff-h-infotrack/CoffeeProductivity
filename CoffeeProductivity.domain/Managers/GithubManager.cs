@@ -44,7 +44,7 @@ namespace CoffeeProductivity.domain.Managers
             var mem = new MemberDetailsVm
             {
                 Id = member.Id,
-                Name = member.Login,
+                Username = member.Login,
                 Url = member.Url,
                 TotalCommitsToday = 0
             };
@@ -78,7 +78,7 @@ namespace CoffeeProductivity.domain.Managers
                             var cutOffDateString = CutOffDay.ToString("s");
                             cutOffDateString += "Z";
 
-                            await GetMemberCommitsForRepo(ev.Repo.Name, mem.Name, cutOffDateString);
+                            await GetMemberCommitsForRepo(ev.Repo.Name, mem, cutOffDateString);
                             //events.Add(ev);
                             AccumulateCommitData(mem, ev);
                         }
@@ -95,9 +95,43 @@ namespace CoffeeProductivity.domain.Managers
             return mem;
         }
 
-        private async Task GetMemberCommitsForRepo(string repoName, string memName, string since)
+        private async Task GetMemberCommitsForRepo(string repoName, MemberDetailsVm mem, string since)
         {
-            var repoCommits = await _service.GetRepoCommits(repoName, memName, since);
+            var repoCommits = await _service.GetRepoCommits(repoName, mem.Username, since);
+            if (repoCommits.Count > 0)
+            {
+                // Just use first commit for now to get info
+                var firstCommit = repoCommits[0];
+                mem.FullName = firstCommit.Commit?.Author?.Name;
+                mem.Email = firstCommit.Commit?.Author?.Email;
+
+                // Count commits
+                int todayCount = 0;
+                int yesterdayCount = 0;
+                int dayBeforeCount = 0;
+                DateTime createdDate;
+                var today = DateTime.Today;
+                var yesterday = today.AddDays(-1);
+                var dayBefore = today.AddDays(-2);
+
+                foreach (var commit in repoCommits)
+                {
+                    if (DateTime.TryParse(commit.Commit.Author.Date, out createdDate))
+                    {
+                        // Temporarily only use day (disregarding month etc for demo purposes)
+                        if (createdDate.Day == today.Day) todayCount++;
+                        else if (createdDate.Day == yesterday.Day) yesterdayCount++;
+                        else if (createdDate.Day == dayBefore.Day) dayBeforeCount++;
+                    }
+                }
+
+                mem.TotalCommitsToday += todayCount;
+                mem.CommitsDailyAvg = (yesterdayCount + dayBeforeCount) / 2;
+            }
+            else
+            {
+                mem.CommitsDailyAvg = 0;
+            }
         }
 
         private void AccumulateCommitData(MemberDetailsVm mem, GithubEvent ev)
