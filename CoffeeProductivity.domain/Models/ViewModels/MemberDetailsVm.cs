@@ -10,6 +10,9 @@ namespace CoffeeProductivity.domain.Models.ViewModels
 
         public string Name { get; set; }
 
+        public string Email { get; set; }
+        public string DefaultGithubEmail { get; set; }
+
         public string DisplayLogin { get; set; }
         public string Url { get; set; }
         public int TotalCommitsThisHour { get; set; }

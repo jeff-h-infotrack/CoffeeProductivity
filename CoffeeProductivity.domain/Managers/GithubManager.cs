@@ -64,14 +64,21 @@ namespace CoffeeProductivity.domain.Managers
                         var ev = pageEvents[i];
                         // Temporarily obtain just a few days ago
                         var CutOffDay = DateTime.Today.AddDays(-3);
+                        var createdAt = DateTime.Parse(pageEvents[i].created_at);
 
-                        if (DateTime.Compare(pageEvents[i].CreatedAt, CutOffDay) < 0)
+                        //if (DateTime.Compare(createdAt, CutOffDay) > 0)
+                        //{
+                        //    isObtained = true;
+                        //    break;
+                        //} 
+                        
+                        if (ev.Type == "PushEvent")
                         {
-                            isObtained = true;
-                            break;
-                        } 
-                        else if (ev.Type == "PushEvent")
-                        {
+                            var repoName = ev.Repo.Name;
+                            var cutOffDateString = CutOffDay.ToString("s");
+                            cutOffDateString += "Z";
+
+                            await GetMemberCommitsForRepo(ev.Repo.Name, mem.Name, cutOffDateString);
                             //events.Add(ev);
                             AccumulateCommitData(mem, ev);
                         }
@@ -86,6 +93,11 @@ namespace CoffeeProductivity.domain.Managers
             }
 
             return mem;
+        }
+
+        private async Task GetMemberCommitsForRepo(string repoName, string memName, string since)
+        {
+            var repoCommits = await _service.GetRepoCommits(repoName, memName, since);
         }
 
         private void AccumulateCommitData(MemberDetailsVm mem, GithubEvent ev)

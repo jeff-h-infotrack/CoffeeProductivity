@@ -10,5 +10,6 @@ namespace CoffeeProductivity.data.Services
     {
         Task<List<GithubEvent>> GetEvents(string user, int page);
         Task<List<Member>> GetOrganisationMembers(string org, int page);
+        Task<List<RepositoryCommit>> GetRepoCommits(string repoName, string memName, string since);
     }
 }

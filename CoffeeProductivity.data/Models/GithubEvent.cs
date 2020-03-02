@@ -17,6 +17,6 @@ namespace CoffeeProductivity.data.Models
         public bool Public { get; set; }
 
         [JsonPropertyName("created_at")]
-        public DateTime CreatedAt { get; set; }
+        public string created_at { get; set; }
     }
 }

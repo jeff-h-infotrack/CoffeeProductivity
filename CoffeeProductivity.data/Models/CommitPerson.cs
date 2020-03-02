@@ -4,9 +4,8 @@ using System.Text;
 
 namespace CoffeeProductivity.data.Models
 {
-    public class Author
+    public class CommitPerson : Person
     {
-        public string Email { get; set; }
-        public string Name { get; set; }
+        public DateTime Date { get; set; }
     }
 }

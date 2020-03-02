@@ -61,5 +61,24 @@ namespace CoffeeProductivity.data.Services
             else if (response.StatusCode == HttpStatusCode.NotFound) return null;
             else throw new Exception(response.ReasonPhrase);
         }
+
+        public async Task<List<RepositoryCommit>> GetRepoCommits(string repoName, string memName, string since)
+        {
+            var path = $"/repos/{repoName}/commits";
+            if (memName != null || since != null) path += "?";
+            if (memName != null) path += $"author={memName}";
+            if (since != null) path += $"since={since}";
+
+            var response = await _client.GetAsync(path);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<IEnumerable<RepositoryCommit>>(jsonString);
+                return result.ToList();
+            }
+            else if (response.StatusCode == HttpStatusCode.NotFound) return null;
+            else throw new Exception(response.ReasonPhrase);
+        }
     }
 }

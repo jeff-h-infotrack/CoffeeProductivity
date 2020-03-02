@@ -4,12 +4,9 @@ using System.Text;
 
 namespace CoffeeProductivity.data.Models
 {
-    public class Commit
+    public class Tree
     {
         public string Sha { get; set; }
-        public Person Author { get; set; }
-        public string Message { get; set; }
-        public bool Distinct { get; set; }
         public string Url { get; set; }
     }
 }
