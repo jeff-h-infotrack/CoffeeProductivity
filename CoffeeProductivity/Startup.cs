@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using CoffeeProductivity.domain.Frameworks;
 using CoffeeProductivity.domain.Managers;
+using CoffeeProductivity.Middlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -71,6 +72,7 @@ namespace CoffeeProductivity
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseMiddleware<ExceptionMiddleware>();
             app.UseHttpsRedirection();
 
             app.UseSwagger();
@@ -82,8 +84,6 @@ namespace CoffeeProductivity
 
             app.UseRouting();
             app.UseCors(MyAllowSpecificOrigins);
-
-            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
