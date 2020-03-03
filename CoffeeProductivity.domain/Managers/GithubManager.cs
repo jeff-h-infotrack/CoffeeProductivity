@@ -27,7 +27,8 @@ namespace CoffeeProductivity.domain.Managers
             
             // First get members
             // Currently: only get first page due to rate limit and only need for demo purposes
-            var members = await GetAllMembers();
+            //var members = await GetAllMembers();
+            var members = await GetMembersFirstPage();
 
             var memberDetails = new List<MemberDetailsVm>();
             // For each member, get their events
@@ -38,6 +39,12 @@ namespace CoffeeProductivity.domain.Managers
             }
 
             return memberDetails;
+        }
+
+        private async Task<List<Member>> GetMembersFirstPage()
+        {
+            var members = await _service.GetOrganisationMembers(_organisation, 1);
+            return members;
         }
 
         private async Task<List<Member>> GetAllMembers()
@@ -71,7 +78,9 @@ namespace CoffeeProductivity.domain.Managers
                 Id = member.Id,
                 Username = member.Login,
                 Url = member.Url,
-                TotalCommitsToday = 0
+                TotalCommitsToday = 0,
+                TotalCommitsThisHour = 0,
+                TotalCommitsRestOfDay = 0
             };
 
             var page = 1;
@@ -131,17 +140,34 @@ namespace CoffeeProductivity.domain.Managers
                 int todayCount = 0;
                 int yesterdayCount = 0;
                 int dayBeforeCount = 0;
+                int thisHour = 0;
+                int overHourAgo = 0;
                 DateTime createdDate;
-                var today = DateTime.Today;
-                var yesterday = today.AddDays(-1);
-                var dayBefore = today.AddDays(-2);
+                var now = DateTime.Now;
+                var yesterday = now.AddDays(-1);
+                var dayBefore = now.AddDays(-2);
 
                 foreach (var commit in repoCommits)
                 {
                     if (DateTime.TryParse(commit.Commit.Author.Date, out createdDate))
                     {
                         // Temporarily only use day (disregarding month etc for demo purposes)
-                        if (createdDate.Day == today.Day) todayCount++;
+                        if (createdDate.Day == now.Day)
+                        {
+                            todayCount++;
+                            var oneHrAgo = now.AddHours(-1);
+                            int result = DateTime.Compare(oneHrAgo, createdDate);
+
+                            if (result < 0)
+                            {
+                                // oneHourAgo is earlier than createdDate -> was created within 1 hour
+                                thisHour++;
+                            }
+                            else
+                            {
+                                overHourAgo++;
+                            }
+                        }
                         else if (createdDate.Day == yesterday.Day) yesterdayCount++;
                         else if (createdDate.Day == dayBefore.Day) dayBeforeCount++;
                     }
@@ -149,6 +175,8 @@ namespace CoffeeProductivity.domain.Managers
 
                 mem.TotalCommitsToday += todayCount;
                 mem.CommitsDailyAvg = (yesterdayCount + dayBeforeCount) / 2;
+                mem.TotalCommitsThisHour += thisHour;
+                mem.TotalCommitsRestOfDay += overHourAgo;
             }
             else
             {
