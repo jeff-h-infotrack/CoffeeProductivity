@@ -26,7 +26,7 @@ namespace CoffeeProductivity.domain.Managers
         {
             // First get members
             // Currently: only get first page due to rate limit and only need for demo purposes
-            var members = await _service.GetOrganisationMembers(_organisation, 1);
+            var members = await _service.GetOrganisationMembers(_organisation, 2);
 
             var memberDetails = new List<MemberDetailsVm>();
             // For each member, get their events
@@ -50,47 +50,44 @@ namespace CoffeeProductivity.domain.Managers
             };
 
             var page = 1;
-            var isObtained = false;
+            //await GetAllPageEvents(mem);
 
-            // Need to call several requests to get all events since fixed page size of 30 
-            while (!isObtained)
+            // Just get most recent push event (most recent commit)
+            // to then use repo name and loign name to search repo commits AP
+            var pageEvents = await _service.GetEvents(member.Login, page);
+            if (pageEvents.Count > 0)
             {
-                var pageEvents = await _service.GetEvents(member.Login, page);
-                if (pageEvents.Count > 0)
+                // Only add if within 1 week and is a PushEvent
+                for (int i = 0; i < pageEvents.Count; i++)
                 {
-                    // Only add if within 1 week and is a PushEvent
-                    for (int i = 0; i < pageEvents.Count; i++)
+                    var ev = pageEvents[i];
+                    // obtain just a few days ago
+                    var CutOffDay = DateTime.Today.AddDays(-3);
+                    //var createdAt = DateTime.Parse(pageEvents[i].created_at);
+
+                    //if (DateTime.Compare(createdAt, CutOffDay) > 0)
+                    //{
+                    //    isObtained = true;
+                    //    break;
+                    //} 
+
+                    if (ev.Type == "PushEvent")
                     {
-                        var ev = pageEvents[i];
-                        // Temporarily obtain just a few days ago
-                        var CutOffDay = DateTime.Today.AddDays(-3);
-                        var createdAt = DateTime.Parse(pageEvents[i].created_at);
+                        var repoName = ev.Repo.Name;
+                        var cutOffDateString = CutOffDay.ToString("s");
+                        cutOffDateString += "Z";
 
-                        //if (DateTime.Compare(createdAt, CutOffDay) > 0)
-                        //{
-                        //    isObtained = true;
-                        //    break;
-                        //} 
-                        
-                        if (ev.Type == "PushEvent")
-                        {
-                            var repoName = ev.Repo.Name;
-                            var cutOffDateString = CutOffDay.ToString("s");
-                            cutOffDateString += "Z";
-
-                            await GetMemberCommitsForRepo(ev.Repo.Name, mem, cutOffDateString);
-                            //events.Add(ev);
-                            AccumulateCommitData(mem, ev);
-                        }
+                        await GetMemberCommitsForRepo(ev.Repo.Name, mem, cutOffDateString);
+                        //events.Add(ev);
+                        //AccumulateCommitData(mem, ev);
+                        break;
                     }
-
-                    page++;
-                }
-                else
-                {
-                    isObtained = true;
                 }
             }
+
+
+            // Need to call several requests to get all events since fixed page size of 30 
+
 
             return mem;
         }
@@ -98,7 +95,7 @@ namespace CoffeeProductivity.domain.Managers
         private async Task GetMemberCommitsForRepo(string repoName, MemberDetailsVm mem, string since)
         {
             var repoCommits = await _service.GetRepoCommits(repoName, mem.Username, since);
-            if (repoCommits.Count > 0)
+            if (repoCommits != null && repoCommits.Count > 0)
             {
                 // Just use first commit for now to get info
                 var firstCommit = repoCommits[0];
@@ -133,6 +130,51 @@ namespace CoffeeProductivity.domain.Managers
                 mem.CommitsDailyAvg = 0;
             }
         }
+
+        private async Task GetAllPageEvents(MemberDetailsVm mem)
+        {
+            var page = 0;
+            var isObtained = false;
+
+            while (!isObtained)
+            {
+                var pageEvents = await _service.GetEvents(mem.Username, page);
+                if (pageEvents.Count > 0)
+                {
+                    // Only add if within 1 week and is a PushEvent
+                    for (int i = 0; i < pageEvents.Count; i++)
+                    {
+                        var ev = pageEvents[i];
+                        // Temporarily obtain just a few days ago
+                        var CutOffDay = DateTime.Today.AddDays(-3);
+                        var createdAt = DateTime.Parse(pageEvents[i].created_at);
+
+                        //if (DateTime.Compare(createdAt, CutOffDay) > 0)
+                        //{
+                        //    isObtained = true;
+                        //    break;
+                        //} 
+
+                        if (ev.Type == "PushEvent")
+                        {
+                            var repoName = ev.Repo.Name;
+                            var cutOffDateString = CutOffDay.ToString("s");
+                            cutOffDateString += "Z";
+
+                            await GetMemberCommitsForRepo(ev.Repo.Name, mem, cutOffDateString);
+                            //events.Add(ev);
+                            AccumulateCommitData(mem, ev);
+                        }
+                    }
+
+                    page++;
+                }
+                else
+                {
+                    isObtained = true;
+                }
+            }
+        } 
 
         private void AccumulateCommitData(MemberDetailsVm mem, GithubEvent ev)
         {

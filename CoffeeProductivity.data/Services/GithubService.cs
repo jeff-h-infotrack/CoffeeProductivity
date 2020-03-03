@@ -67,6 +67,7 @@ namespace CoffeeProductivity.data.Services
             var path = $"/repos/{repoName}/commits";
             if (memName != null || since != null) path += "?";
             if (memName != null) path += $"author={memName}";
+            if (memName != null) path += "&";
             if (since != null) path += $"since={since}";
 
             var response = await _client.GetAsync(path);
