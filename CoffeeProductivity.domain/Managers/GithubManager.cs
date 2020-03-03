@@ -24,9 +24,10 @@ namespace CoffeeProductivity.domain.Managers
 
         public async Task<List<MemberDetailsVm>> GetOrganisationMembersProductivity()
         {
+            
             // First get members
             // Currently: only get first page due to rate limit and only need for demo purposes
-            var members = await _service.GetOrganisationMembers(_organisation, 2);
+            var members = await GetAllMembers();
 
             var memberDetails = new List<MemberDetailsVm>();
             // For each member, get their events
@@ -37,6 +38,30 @@ namespace CoffeeProductivity.domain.Managers
             }
 
             return memberDetails;
+        }
+
+        private async Task<List<Member>> GetAllMembers()
+        {
+            var page = 1;
+            var isObtained = false;
+            List<Member> allMembers = new List<Member>();
+
+            while (!isObtained)
+            {
+                var members = await _service.GetOrganisationMembers(_organisation, page);
+
+                if (members.Count > 0)
+                {
+                    allMembers.AddRange(members);
+                    page++;
+                }
+                else
+                {
+                    isObtained = true;
+                }
+            }
+
+            return allMembers;
         }
 
         private async Task<MemberDetailsVm> GetMemberEventDetails(Member member)
@@ -53,7 +78,7 @@ namespace CoffeeProductivity.domain.Managers
             //await GetAllPageEvents(mem);
 
             // Just get most recent push event (most recent commit)
-            // to then use repo name and loign name to search repo commits AP
+            // to then use repo name and login name to search repo commits AP
             var pageEvents = await _service.GetEvents(member.Login, page);
             if (pageEvents.Count > 0)
             {
